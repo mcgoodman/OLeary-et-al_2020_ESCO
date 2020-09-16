@@ -1097,19 +1097,30 @@ beam_trophic_pairwise$contrasts %>%
 ### Plot: Mean & SE
 
 ```{r}
-## Summarize number of species per sample
-richness <- trawl_path %>% 
+## Function to Calculate Shannon index for species abundance vector
+shannon_H <- function(x) {
+  x <- x[x>0]
+  p <- x/sum(x)
+  -sum(p*log(p))
+}
+
+## Summarize richness and shannon per sample
+diversity <- trawl_path %>% 
   readxl::read_excel("Fish Count Data Corrected") %>% 
   filter_trawls() %>% 
   mutate(species = paste(Genus, Species)) %>% 
-  filter(Count > 0) %>% 
+  filter(Count > 0) %>% ## For counting non-zero species
   group_by(TrawlType, Period, Year, Season, Site, Replicate) %>% 
-  summarize(richness = length(unique(species)))
+  summarize(richness = length(unique(species)), 
+            shannon = shannon_H(Count))
 
-richness %>% 
+diversity %>% 
   group_by(TrawlType, Period, Season) %>% 
   summarize(mean = mean(richness), 
             se = sd(richness)/sqrt(n())) %>% 
+  mutate(TrawlType = dplyr::recode(TrawlType, 
+                              "Beam" = "Intertidal Flats", 
+                              "Otter" = "Channel")) %>% 
   ggplot(aes(Period, mean, color = Season)) +
   geom_point(position = position_dodge(width = 0.9), size = 3) + 
   scale_y_continuous(expand = c(0,0), limits = c(2, 5)) +
@@ -1127,7 +1138,7 @@ richness %>%
 ### Linear Model
 
 ```{r}
-richness_lm <- lm(richness ~ Period*Season + Site, data = richness)
+richness_lm <- lm(richness ~ Period*Season + Site, data = diversity)
 
 richness_lm %>% anova() %>% 
   rownames_to_column("term") %>% 
@@ -1195,29 +1206,29 @@ species_accum %>%
 ### Plot
 
 ```{r}
-format_iNEXT <- function(df) 1*(t(df) > 0)
-
 trawl_counts_nested <- trawl_counts %>% 
+  select(-Year, -Year, -Replicate, -Site) %>% 
   group_by(TrawlType, Period, Season) %>% 
-  nest(sp_subset, .key = "sp_matrix") %>% 
-  mutate(sp_matrix = map(sp_matrix, format_iNEXT), 
-         richness = map(sp_matrix, ChaoRichness, datatype = "incidence_raw"), 
-         shannon = map(sp_matrix, ChaoShannon, datatype = "incidence_raw"))
+  nest_by(.key = "sp_matrix") %>% 
+  rowwise() %>% 
+  mutate(Chao_data = list(as.abucount(t(sp_matrix))), 
+         richness = list(ChaoRichness(Chao_data, datatype = "abundance")), 
+         shannon = list(ChaoShannon(Chao_data, datatype = "abundance")))
 
- trawl_counts_nested %>% 
+richness_assymp <- trawl_counts_nested %>% 
   dplyr::select(TrawlType, Period, Season, richness) %>% 
-  unnest() %>% 
-  mutate(upper = `95% Lower`, 
-         lower = `95% Upper`, 
-         TrawlType = dplyr::recode(TrawlType, "Beam" = "Intertidal Flats", 
-                                       "Otter" = "Channels")) %>% 
+  unnest(cols = c(richness)) %>% 
+  mutate(TrawlType = dplyr::recode(TrawlType, "Beam" = "Intertidal Flats", 
+                                       "Otter" = "Channels"))
+
+richness_assymp %>% 
   ggplot(aes(Period, Estimator, color = Season, group = Season)) +
   geom_point(position = position_dodge(width = 0.9), size = 3) + 
-  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.3,
+  geom_errorbar(aes(ymin = `95% Lower`, ymax = `95% Upper`), width = 0.3,
                 position = position_dodge(width = 0.9),
                 size = 1) +
   facet_wrap(~TrawlType) +
-  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 20), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0, 110), breaks = seq(0, 100, 20), expand = c(0,0)) +
   scale_color_manual(values = c("grey60", "black")) +
   ylab("Species Richness") +
   theme_trawls + 
@@ -1230,16 +1241,86 @@ trawl_counts_nested <- trawl_counts %>%
 ### Table
 
 ```{r}
-
+knitr::kable(richness_assymp)
 ```
 
 
 # Shannon Diversity
 
+## Per-Sample Diversity
 
+### Plot: Mean & SE
 
+```{r}
+diversity %>% 
+  filter(shannon > 0) %>% 
+  group_by(TrawlType, Period, Season) %>% 
+  summarize(mean = mean(shannon), 
+            se = sd(shannon)/sqrt(n())) %>% 
+  mutate(TrawlType = dplyr::recode(TrawlType, 
+                                   "Beam" = "Intertidal Flats", 
+                                   "Otter" = "Channel")) %>% 
+  ggplot(aes(Period, mean, color = Season)) +
+  geom_point(position = position_dodge(width = 0.9), size = 3) + 
+  #scale_y_continuous(expand = c(0,0), limits = c(2, 5)) +
+  scale_color_manual(values = c("grey60", "black")) +
+  facet_wrap(~TrawlType, ncol = 2) +
+  geom_errorbar(aes(x = Period, ymin = mean - se, ymax = mean + se), 
+                position = position_dodge(width = 0.9), 
+                width = 0.4, size = 1) +
+  theme_trawls +
+  ylab("Shannon Diversity") + 
+  annotate("segment", x = -Inf, xend = -Inf, y = -Inf, yend = Inf, size = 1) +
+  coord_cartesian(clip = "off")
+```
 
+### Linear Model
 
+```{r}
+shannon_lm <- lm(
+  shannon ~ Period*Season + Site, 
+  data = diversity[diversity$shannon > 0,]
+)
+
+shannon_lm %>% anova() %>% 
+  rownames_to_column("term") %>% 
+  mutate_if(is.numeric, round, digits = 3) %>% 
+  knitr::kable()
+```
+
+## Assymptotic Diversity
+
+### Plot
+
+```{r}
+shannon_assymp <- trawl_counts_nested %>% 
+  dplyr::select(TrawlType, Period, Season, shannon) %>% 
+  unnest(cols = c(shannon)) %>% 
+  mutate(TrawlType = dplyr::recode(TrawlType, "Beam" = "Intertidal Flats", 
+                                   "Otter" = "Channel")) 
+
+shannon_assymp %>% 
+  ggplot(aes(Period, Estimator, color = Season, group = Season)) +
+  geom_point(position = position_dodge(width = 0.9), size = 3) + 
+  geom_errorbar(aes(ymin = `95% Lower`, ymax = `95% Upper`), width = 0.3,
+                position = position_dodge(width = 0.9),
+                size = 1) +
+  facet_wrap(~TrawlType) +
+  scale_y_continuous(limits = c(0, 2), breaks = seq(0, 2, 0.5), expand = c(0,0)) +
+  scale_color_manual(values = c("grey60", "black")) +
+  ylab("Species Richness") +
+  theme_trawls + 
+  theme(axis.title.x = element_blank(), 
+        axis.title = element_text(size = 14, face = "bold")) + 
+  annotate("segment", x = -Inf, xend = -Inf, y = -Inf, yend = Inf, size = 1) + 
+  coord_cartesian(clip = "off")
+```
+
+### Table
+
+```{r}
+knitr::kable(shannon_assymp)
+```
 
 
 
