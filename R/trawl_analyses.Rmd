@@ -1032,8 +1032,9 @@ ggsave(here("figures", "trophic_level.tiff"), width = 18, height = 10,
 
 ## Channel Model
 
-
 We assessed changes in average sample trophic level with linear regression, weighted by the number of individuals in each trawl. Trophic level estimates were gathered from FishBase; most species estimates were from diet studies, but some were Bayesian estimates based on nearest relatives.
+
+In the channel, we find a general increase in trophic level across both fall and summer samples following eelgrass decline (p < 0.001), with no interaction (p = 0.65) between period and season, suggesting the magnitude of increase was similar across seasons.
 
 ```{r trophic_lm_channel}
 ## Fit linear model
@@ -1052,6 +1053,8 @@ otter_trophic_lm %>% anova() %>%
 
 ## Mudflats Model 
 
+We also find a significant increase in mean-sample trophic level following eelgrass decline in the mudflats (p < 0.001), but with an interaction between period and season (p = 0.001), suggesting the magnitude of the increase differed between fall and summer.
+
 ```{r trophic_lm_mudflats}
 ## Fit linear model
 beam_trophic_lm <- lm(
@@ -1069,8 +1072,181 @@ beam_trophic_lm %>% anova() %>%
 
 ### Pairwise Comparisons
 
+While the average difference between pre-decline and post-decline samples was greater in the summer, we find find significant increases in trophic level during both the fall (p = 0.014) and summer (p < 0.001) following eelgrass decline.
+
+```{r}
+beam_trophic_pairwise <- emmeans(
+  beam_trophic_lm, 
+  pairwise ~ Period:Season, 
+  data = trophic_lm_data[trophic_lm_data$TrawlType == "Beam",],
+  adjust = "fdr"
+)
+
+beam_trophic_pairwise %<>% summary() 
+
+beam_trophic_pairwise$contrasts %>% 
+  as.data.frame() %>% 
+  mutate_if(is.numeric, round, digits = 3) %>% 
+  knitr::kable()
+```
+
+# Species Richness
+
+## Per-sample Richness
+
+### Plot: Mean & SE
+
+```{r}
+## Summarize number of species per sample
+richness <- trawl_path %>% 
+  readxl::read_excel("Fish Count Data Corrected") %>% 
+  filter_trawls() %>% 
+  mutate(species = paste(Genus, Species)) %>% 
+  filter(Count > 0) %>% 
+  group_by(TrawlType, Period, Year, Season, Site, Replicate) %>% 
+  summarize(richness = length(unique(species)))
+
+richness %>% 
+  group_by(TrawlType, Period, Season) %>% 
+  summarize(mean = mean(richness), 
+            se = sd(richness)/sqrt(n())) %>% 
+  ggplot(aes(Period, mean, color = Season)) +
+  geom_point(position = position_dodge(width = 0.9), size = 3) + 
+  scale_y_continuous(expand = c(0,0), limits = c(2, 5)) +
+  scale_color_manual(values = c("grey60", "black")) +
+  facet_wrap(~TrawlType, ncol = 2) +
+  geom_errorbar(aes(x = Period, ymin = mean - se, ymax = mean + se), 
+                position = position_dodge(width = 0.9), 
+                width = 0.4, size = 1) +
+  theme_trawls +
+  ylab("Mean Sample Richness") + 
+  annotate("segment", x = -Inf, xend = -Inf, y = -Inf, yend = Inf, size = 1) +
+  coord_cartesian(clip = "off")
+```
+
+### Linear Model
+
+```{r}
+richness_lm <- lm(richness ~ Period*Season + Site, data = richness)
+
+richness_lm %>% anova() %>% 
+  rownames_to_column("term") %>% 
+  mutate_if(is.numeric, round, digits = 3) %>% 
+  knitr::kable()
+```
+
+## Rarefaction Curves
+
+```{r}
+## Read in trawl species counts
+trawl_counts <- trawl_path %>% 
+  readxl::read_excel("Fish Count Data Corrected") %>% 
+  filter_trawls() %>% 
+  mutate(species = paste(Genus, Species)) %>% 
+  select(Period, Year, Season, TrawlType, Site, Replicate, 
+         species, Count) %>% 
+  pivot_wider(names_from = species, values_from = Count) 
+
+## Fit species accumulation curves for each subset
+species_accum <- trawl_counts %>% 
+  group_by(TrawlType, Period, Season) %>% 
+  nest() %>% 
+  mutate(
+    species = map(data, dplyr::select, -Year, -Site, -Replicate), 
+    spec_accum = map(species, specaccum), 
+    spec_accum = map(spec_accum, function(x) {
+      tibble(site = x$sites, richness = x$richness, sd = x$sd) 
+    })
+  ) %>% 
+  dplyr::select(TrawlType, Period, Season, spec_accum) %>% 
+  unnest(cols = c(spec_accum)) %>% 
+  ungroup()
+  
+## Plot species accumulation curves
+species_accum %>%
+  mutate(
+    site = ifelse(Season == "Summer", site + 0.2, site - 0.2), ## x-offset
+    Season = paste0(" ", Season, " "), ## for legend
+    TrawlType = dplyr::recode(TrawlType, 
+                              "Beam" = "Intertidal Flats", 
+                              "Otter" = "Channel"),
+    group = fct_rev(factor(paste(TrawlType, Period))),
+    group = paste(letters[group], group, sep = ". ")
+  ) %>% 
+  ggplot(aes(site, richness, color = Season, fill = Season)) + 
+  geom_point() +
+  lemon::facet_rep_wrap(~group, ncol = 2) + 
+  geom_linerange(aes(ymin = richness - sd, ymax = richness + sd)) +
+  scale_color_manual(values = c("red", "black")) +
+  labs(x = "Sites", y = "Cumulative Species Count") +
+  scale_y_continuous(expand = c(0,0), breaks = seq(0, 15, 5), limits = c(0, 19)) + 
+  scale_x_continuous(expand = c(0,0), breaks = seq(0, 15, 5), limits = c(0, 19)) +
+  theme_trawls +
+  theme(strip.text = element_text(hjust = 0), 
+        legend.position = "bottom",
+        legend.text = element_text(size = 16), 
+        legend.title = element_text(size = 16, face = "bold"), 
+        panel.spacing.y = unit(1, "lines")) + 
+  coord_cartesian(clip = "off")
+```
+
+## Assymptotic Richness
+
+### Plot
+
+```{r}
+format_iNEXT <- function(df) 1*(t(df) > 0)
+
+trawl_counts_nested <- trawl_counts %>% 
+  group_by(TrawlType, Period, Season) %>% 
+  nest(sp_subset, .key = "sp_matrix") %>% 
+  mutate(sp_matrix = map(sp_matrix, format_iNEXT), 
+         richness = map(sp_matrix, ChaoRichness, datatype = "incidence_raw"), 
+         shannon = map(sp_matrix, ChaoShannon, datatype = "incidence_raw"))
+
+ trawl_counts_nested %>% 
+  dplyr::select(TrawlType, Period, Season, richness) %>% 
+  unnest() %>% 
+  mutate(upper = `95% Lower`, 
+         lower = `95% Upper`, 
+         TrawlType = dplyr::recode(TrawlType, "Beam" = "Intertidal Flats", 
+                                       "Otter" = "Channels")) %>% 
+  ggplot(aes(Period, Estimator, color = Season, group = Season)) +
+  geom_point(position = position_dodge(width = 0.9), size = 3) + 
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.3,
+                position = position_dodge(width = 0.9),
+                size = 1) +
+  facet_wrap(~TrawlType) +
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 20), expand = c(0,0)) +
+  scale_color_manual(values = c("grey60", "black")) +
+  ylab("Species Richness") +
+  theme_trawls + 
+  theme(axis.title.x = element_blank(), 
+        axis.title = element_text(size = 14, face = "bold")) + 
+  annotate("segment", x = -Inf, xend = -Inf, y = -Inf, yend = Inf, size = 1) + 
+  coord_cartesian(clip = "off")
+```
+
+### Table
+
 ```{r}
 
 ```
+
+
+# Shannon Diversity
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
