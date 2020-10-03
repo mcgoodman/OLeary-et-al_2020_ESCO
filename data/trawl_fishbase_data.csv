@@ -1,0 +1,49 @@
+sciname,a,b,trophic_level,trophic_level_se,LW_Notes,Troph_Notes
+Apodichthys flavidus,0.00182,3.15,3.55,0.5,fishbase model estimate,
+Apodichthys fucorum,0.00182,3.15,3.46,0.46,fishbase model estimate,
+Artedius notospilotus,0.00708,3.13,3.9,0.4,fishbase model estimate,Based on closest relatives
+Atherinops affinis,0.04,2.5,2.76,0.28,,
+Atherinopsis californiensis,0.01,2.92,2.33,0.21,,
+Aulorhynchus flavidus,0.00044,3.43,3.39,0.4158,,
+Caulolatilus princeps,0.0239,3,3.9,0.5,,Based on closest relatives
+Citharichthys stigmaeus,0.00708,3.15,3.4,0.52,fishbase model estimate,
+Clevelandia ios,0.00871,3.06,3.12,0.42,,
+Cosmocampus arctus,0.0005,3.1,3.3,0.4,,Based on closest relatives
+Cymatogaster aggregata,0.0195,3.02,2.99,0.31,,
+Embiotoca jacksoni,0.02818,3.04,3.31,0.38,,
+Embiotoca lateralis,0.0195,3.02,3.33,0.49,,
+Fundulus parvipinnis,0.00955,3.16,3.3,0.2,,Based on closest relatives
+Gasterosteus aculeatus,0.0105,3.049,3.380000114,0.4625,,
+Gibbonsia elegans,0.00955,3.06,3.3,0.51,,
+Gibbonsia metzi,0.00513,3.07,3.4,0.4,fishbase model estimate,
+Gibbonsia montereyensis,0.00513,3.07,3.4,0.2,fishbase model estimate,
+Gillichthys mirabilis,0.01175,3.1,3.2,0.35,,
+Heterostichus rostratus,0.00513,3.07,3.89,0.62,fishbase model estimate,
+Hypsoblennius gentilis,0.0112,2.979,2.71,0.24,,
+Hypsopsetta guttulata,0.00912,3.09,3.41,0.46,fishbase model estimate,
+Hypsurus caryi,0.0195,3.02,3.3,0.5,,
+Lepidogobius lepidus,0.00871,3.07,3.3,0.5,,Based on closest relatives
+Leptocottus armatus,0.01047,3.14,3.68,0.64,fishbase model estimate,
+Micrometrus minimus,0.0195,3.02,2.78,0.26,,
+Myliobatis californica,0.00389,3.09,3.5,0.37,fishbase model estimate,
+Oligocottus snyderi,0.01622,3.22,3.1,0.2,,
+Ophiodon elongatus,0.0133,3,4.3,0.78,,
+Paraclinus integripinnis,0.0055,3.06,3.3,0.53,,
+Paralabrax clathratus,0.00273,3.27,3.98,0.66,,
+Paralichthys californicus,0.00814,3.071,4.5,0.63,,
+Parophrys vetulus,0.01429,2.9036,3.39,0.46,,
+Phanerodon furcatus,0.01318,3.05,3.3,0.5,,
+Platichthys stellatus,0.0121,3.081,3.5,0.5,,
+Platyrhinoidis triseriata,0.01,3.04,3.42,0.42,fishbase model estimate,
+Pleuronichthys ritteri,0.00912,3.09,3.2,0.4,fishbase model estimate,Based on closest relatives
+Porichthys notatus,0.008,3.047,4.04,0.67,fishbase model estimate,
+Quietula y-cauda,0.00724,3,3.2,0.4,fishbase model estimate,Based on closest relatives
+Rhacochilus vacca,0.0195,3.02,3.38,0.53,fishbase model estimate,
+Scorpaenichthys marmoratus,0.02914,3,3.619999886,0.47,,
+Sebastes dallii,0.01023,3.07,3.6,0.6,fishbase model estimate,Based on closest relatives
+Sebastes rastrelliger,0.022,3,3.87,0.61,,
+Sebastes serranoides,0.00912,3.04,3.68,0.45,,
+Symphurus atricaudus,0.0123,3.05,3.39,0.48,fishbase model estimate,
+Syngnathus leptorhynchus,0.00032,3.09,3.24000001,0.4014,fishbase model estimate,
+Synodus lucioceps,0.009,2.907,4.5,0.8,,
+Urobatis halleri,0.00734,3,3.2,0.1,,Based on diet studies
