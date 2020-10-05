@@ -191,8 +191,9 @@ seine_sp_data <- seine_data %>%
   rename(seagrass_unvegetated = `seagrass/unvegetated`)
 
 ## Species matrix
+ordination_groups <- with(seine_sp_data, paste(seagrass_unvegetated, site_name))
 seine_sp_matrix <- as.matrix(seine_sp_data[,6:23])
-rownames(seine_sp_matrix) <- with(seine_sp_data, paste(seagrass_unvegetated, site_name))
+rownames(seine_sp_matrix) <- ordination_groups
 
 ## Bray-Curtis dissimiliarity matrix
 seine_bray <- vegdist(seine_sp_matrix, method = "bray")
@@ -222,7 +223,31 @@ mds_plot_data %>%
   guides(fill=guide_legend(override.aes=list(shape=21)))
 ```
 
-
 ## PERMANOVA
+
+```{r permanova}
+seine_permanova <- adonis2(
+  seine_bray ~ site_name*seagrass_unvegetated, 
+  data = seine_sp_data, 
+  perm = 10000
+)
+
+seine_permanova %>% as.data.frame() %>% 
+  rownames_to_column("term") %>% 
+  mutate_if(is.numeric, round, digits = 3) %>% 
+  knitr::kable()
+```
+
+## Pairwise Comparisons
+
+```{r permanova_pairwise}
+seine_pairs <- RVAideMemoire::pairwise.perm.manova(
+  seine_bray, fact = ordination_groups,
+  p.method = "fdr", nperm = 10000
+)
+
+seine_pairs_p <- as.data.frame(round(seine_pairs$p.value, digits = 3))
+knitr::kable(seine_pairs_p)
+```
 
 ## SIMPER
