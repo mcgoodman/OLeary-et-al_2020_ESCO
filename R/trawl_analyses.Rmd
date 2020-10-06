@@ -256,95 +256,61 @@ biomass_summary %>%
 ## Plot: Biomass & Abundance
 
 ```{r biomass_abundance_plot, echo = FALSE, fig.height = 8}
-bio_count_summary <- biomass_summary %>% 
-  mutate(type = "biomass") %>% 
-  full_join(mutate(abundance_summary, type = "abundance")) %>% 
-  split(.$TrawlType)
+bio_count_plot_data <- read_csv(here("data", "trawl_biomass_count_summary.csv"))
 
+panel_labels <- data.frame(
+  x = -Inf, y = Inf, 
+  TrawlType = fct_rev(factor(rep(c("Channel", "Intertidal Flats"), 2))), 
+  type = rep(c("Total Biomass\n(g/Trawl)", "Total Abundance\n(count/Trawl)"), 
+             each = 2), 
+  label = c("d", "c", "b", "a")
+)
 
-bio_count_plot <- function(df, title, legend_pos = "none", interval = 20) {
-  
-  if (unique(df$type) == "abundance") {
-    ylab = "Total Abundance (count/trawl)"
-  } else {
-    ylab = "Total Biomass (g/trawl)"
-  }
-  
-  ggplot(df, aes(Period, mean, color = Season)) + 
-    geom_errorbar(aes(x = Period, ymin = lower, ymax = upper), 
-                  position = position_dodge(width = 0.9), 
-                  width = 0.4, size = 1) + 
-    geom_line(aes(x = as.numeric(as.factor(Period))),  
-              position = position_dodge(width = 0.9), 
-              size = 1.1) + 
-    geom_point(position = position_dodge(width = 0.9), 
-               size = 2, stroke = 1.1, shape = 21, 
-               fill = "white") + 
-    scale_color_manual(values = c("grey50", "black")) +
-    scale_y_continuous(expand = c(0,0), limits = c(0, max(df$upper * 1.05)),
-                       breaks = seq(0, max(df$upper), interval)) +
-    theme_trawls +
-    theme(axis.title.y = element_text(size = 16, face = "bold"),
-          plot.title = element_text(size = 18, face = "bold", hjust = 0),
-          axis.title.x = element_blank(), 
-          legend.position = legend_pos,
-          legend.text = element_text(size = 18),
-          legend.title = element_text(size = 18, face = "bold"),
-          axis.text.y = element_text(size = 14),
-          axis.text.x = element_text(size = 16)) + 
-    labs(y = ylab, fill = "Season ", title = title)
-}
-
-legend_bars <- 
-  bio_count_summary$`Intertidal Flats` %>% 
-  filter(type == "abundance") %>% 
-  mutate(Season = paste0(Season, " ")) %>% 
-  bio_count_plot("", "bottom") %>% 
-  ggplot_build() %>% 
-  ggplot_gtable()
-
-
-legend_bottom <- which(sapply(legend_bars$grobs, function(x) x$name) == "guide-box")
-legend_bottom <- legend_bars$grobs[[legend_bottom]]
-
-mudflats_count <- 
-  bio_count_summary$`Intertidal Flats` %>% 
-  filter(type == "abundance") %>% 
-  bio_count_plot("a. Intertidal Flats Fish Count") + 
-  theme(plot.margin = margin(b = 12))
-
-mudflats_biomass <-
-  bio_count_summary$`Intertidal Flats` %>% 
-  filter(type == "biomass") %>% 
-  bio_count_plot("b. Intertidal Flats Fish Biomass",
-                 interval = 40) + 
-  theme(plot.margin = margin(b = 12))
-
-channel_count <-
-  bio_count_summary$`Channel` %>% 
-  filter(type == "abundance") %>% 
-  bio_count_plot("c. Channel Fish Count", 
-                 interval = 25) + 
-  theme(plot.margin = margin(12))
-
-channel_biomass <- 
-  bio_count_summary$`Channel` %>% 
-  filter(type == "biomass") %>% 
-  bio_count_plot("d. Channel Fish Biomass", 
-                 interval = 100) + 
-  theme(plot.margin = margin(12))
-
-line = cowplot::ggdraw() +
-  cowplot::draw_line(x = c(-Inf, Inf), y = c(0.5, 0.5), 
-                     color = "black", size = 1)
-
-cowplot::plot_grid(arrangeGrob(mudflats_count, mudflats_biomass, ncol = 2), line, 
-                   arrangeGrob(channel_count, channel_biomass, ncol = 2) , 
-                   legend_bottom, nrow = 4, rel_heights = c(6, 0.1, 6, 0.8))
+bio_count_plot_data %>% 
+  mutate(TrawlType = fct_rev(as.factor(TrawlType)),
+         type = ifelse(type == "biomass", "Total Biomass\n(g/Trawl)", 
+                       "Total Abundance\n(count/Trawl)"), 
+         Period = fct_rev(Period)) %>% 
+  ggplot(aes(Period, mean, color = Season)) + 
+  geom_errorbar(aes(x = Period, ymin = lower, ymax = upper), 
+                position = position_dodge(width = 0.9), 
+                width = 0.4, size = 1) + 
+  geom_line(aes(x = as.numeric(as.factor(Period)), linetype = signif),  
+            position = position_dodge(width = 0.9), show.legend = TRUE,
+            size = 1.1) + 
+  geom_point(aes(shape = Season, size = Season), 
+             position = position_dodge(width = 0.9), stroke = 1.2,
+             fill = "white") + 
+  lemon::facet_rep_grid(type ~ TrawlType, scales = "free_y", switch = "y") + 
+  scale_color_manual(values = c("grey50", "black")) +
+  scale_linetype_manual(values = c("dashed", "solid"), 
+                        labels = c("> 0.05", "< 0.05")) + 
+  scale_size_manual(values = c(2, 2.5)) + 
+  scale_shape_manual(values = c(21, 16)) + 
+  guides(color = guide_legend(nrow = 1), 
+         linetype = guide_legend("adjusted p-value", nrow = 1, 
+                                 keywidth = unit(2, "lines"))) + 
+  theme_trawls +
+  theme(axis.title.y = element_blank(),
+        plot.title = element_text(size = 18, face = "bold", hjust = 0),
+        axis.title.x = element_blank(), 
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.box = "vertical",
+        legend.text = element_text(size = 18),
+        legend.title = element_text(size = 18, face = "bold"),
+        axis.text.y = element_text(size = 14),
+        axis.text.x = element_text(size = 16)) + 
+  labs(fill = "Season") + 
+  expand_limits(y = 0) + 
+  geom_text(aes(x = x, y = y, label = label), data = panel_labels, 
+            vjust = 1, hjust = -1, size = 7,
+            inherit.aes = FALSE)
 ```
 
+
 ```{r echo = FALSE}
-ggsave(here("figures", "biomass_count_plot.tiff"), width = 20, height = 17, 
+ggsave(here("figures", "biomass_count_plot.tiff"), width = 20, height = 18, 
        units = "in", scale = 0.5, dpi = 500)
 ```
 
@@ -408,7 +374,7 @@ beam_biomass_glm %>%
 
 ## NMDS Plot
 
-Separate non-metric multidimensional scaling (NMDS) plots we made for each of the habits (channel and mudflats). Stress for the channel NMDS was 0.16, stress for the mudflats NMDS was 0.19. One extreme outlier was removed from the Channel plot. It contained only one individual of *Paralichthys californicus*, of which only two other individuals were observed in the study. The observation was not dropped from the PERMANOVA analysis, but the qualitative (significance test) results do not change if it is removed.
+Separate non-metric multidimensional scaling (NMDS) plots were made for each of the habits (channel and mudflats). Stress for the channel NMDS was 0.16, stress for the mudflats NMDS was 0.19. One extreme outlier was removed from the Channel plot. It contained only one individual of *Paralichthys californicus*, of which only two other individuals were observed in the study. The observation was not dropped from the PERMANOVA analysis, but the qualitative (significance test) results do not change if it is removed.
 
 ```{r nmds, results = "hide"}
 species_data <- 
@@ -569,7 +535,7 @@ knitr::kable(as.data.frame(round(otter_permanova_pairs$p.value, 3)))
 
 #### SIMPER
 
-For each significant pairwise comparison of interest, we fit a similarity percentages (SIMPER), reporting abundance for species identified by the SIMPER as contributing to observed differences in community composition more than would be expected at random. For each SIMPER output, relevant species are listed, and an abundance plot is provided. 
+For each significant pairwise comparison of interest, we fit a similarity percentages (SIMPER) analysis, reporting abundance for species identified by the SIMPER as contributing to observed differences in community composition more than would be expected at random. For each SIMPER output, relevant species are listed, and an abundance plot is provided. 
 
 **How to interpret this output:** This output is ordered in terms of each species contribution to the difference between groups examined. The `average` variable is the average contribution to the overall dissimilarity, and the `sd` is the standard deviation of that contribution. The `cumsum` variable is the total percent of the variation accounted for by the species and all other species above it.
 
@@ -1100,7 +1066,7 @@ beam_trophic_pairwise$contrasts %>%
 
 ### Plot: Mean & SE
 
-```{r}
+```{r richness_plot}
 ## Function to Calculate Shannon index for species abundance vector
 shannon_H <- function(x) {
   x <- x[x>0]
@@ -1113,21 +1079,27 @@ diversity <-
   read.csv(here("data", "trawl_fish_counts.csv"), stringsAsFactors = FALSE) %>% 
   filter_trawls() %>% 
   mutate(species = paste(Genus, Species)) %>% 
-  filter(Count > 0) %>% ## For counting non-zero species
   group_by(TrawlType, Period, Year, Season, Site, Replicate) %>% 
-  summarize(richness = length(unique(species)), 
+  summarize(richness = sum(Count > 0), 
             shannon = shannon_H(Count))
+
+## Cluster-bootstrap summary of species richness
+richness_summary <- diversity %>% 
+  group_by(TrawlType, Period, Season) %>% 
+  cluster_bootstrap(richness, Site) %>% ungroup() %>% 
+  mutate(TrawlType = dplyr::recode(TrawlType, 
+                              "Beam" = "Intertidal Flats", 
+                              "Otter" = "Channel"))
 
 diversity %>% 
   group_by(TrawlType, Period, Season) %>% 
-  summarize(mean = mean(richness), 
-            se = sd(richness)/sqrt(n())) %>% 
+  summarize(mean = mean(richness), se = sd(richness)/sqrt(n())) %>% 
   mutate(TrawlType = dplyr::recode(TrawlType, 
                               "Beam" = "Intertidal Flats", 
                               "Otter" = "Channel")) %>% 
   ggplot(aes(Period, mean, color = Season)) +
   geom_point(position = position_dodge(width = 0.9), size = 3) + 
-  scale_y_continuous(expand = c(0,0), limits = c(2, 5)) +
+  scale_y_continuous(expand = c(0,0), limits = c(2, 5.5)) +
   scale_color_manual(values = c("grey60", "black")) +
   facet_wrap(~TrawlType, ncol = 2) +
   geom_errorbar(aes(x = Period, ymin = mean - se, ymax = mean + se), 
@@ -1137,14 +1109,32 @@ diversity %>%
   ylab("Mean Sample Richness") + 
   annotate("segment", x = -Inf, xend = -Inf, y = -Inf, yend = Inf, size = 1) +
   coord_cartesian(clip = "off")
+
 ```
 
-### Linear Model
+### Channel Model
 
-```{r}
-richness_lm <- lm(richness ~ Period*Season + Site, data = diversity)
+```{r richness_lm_otter}
+richness_lm_otter <- lm(
+  richness ~ Period*Season + Site, 
+  data = diversity[diversity$TrawlType == "Otter",]
+)
 
-richness_lm %>% anova() %>% 
+richness_lm_otter %>% anova() %>% 
+  rownames_to_column("term") %>% 
+  mutate_if(is.numeric, round, digits = 3) %>% 
+  knitr::kable()
+```
+
+### Mudflats Model
+
+```{r richness_lm_beam}
+richness_lm_beam <- lm(
+  richness ~ Period*Season + Site, 
+  data = diversity[diversity$TrawlType == "Beam",]
+)
+
+richness_lm_beam %>% anova() %>% 
   rownames_to_column("term") %>% 
   mutate_if(is.numeric, round, digits = 3) %>% 
   knitr::kable()
@@ -1152,7 +1142,7 @@ richness_lm %>% anova() %>%
 
 ## Rarefaction Curves
 
-```{r}
+```{r rarefaction}
 ## Read in trawl species counts
 trawl_counts <- 
   read.csv(here("data", "trawl_fish_counts.csv"), stringsAsFactors = FALSE) %>% 
@@ -1209,7 +1199,7 @@ species_accum %>%
 
 ### Plot
 
-```{r}
+```{r richness_assymp}
 trawl_counts_nested <- trawl_counts %>% 
   select(-Year, -Year, -Replicate, -Site) %>% 
   group_by(TrawlType, Period, Season) %>% 
@@ -1244,7 +1234,7 @@ richness_assymp %>%
 
 ### Table
 
-```{r}
+```{r richness_assymp_table}
 knitr::kable(richness_assymp)
 ```
 
@@ -1255,21 +1245,21 @@ knitr::kable(richness_assymp)
 
 ### Plot: Mean & SE
 
-```{r}
-diversity %>% 
-  filter(shannon > 0) %>% 
+```{r shannon_plot}
+shannon_summary <- diversity %>%
   group_by(TrawlType, Period, Season) %>% 
-  summarize(mean = mean(shannon), 
-            se = sd(shannon)/sqrt(n())) %>% 
+  cluster_bootstrap(shannon, Site) %>% ungroup() %>% 
   mutate(TrawlType = dplyr::recode(TrawlType, 
-                                   "Beam" = "Intertidal Flats", 
-                                   "Otter" = "Channel")) %>% 
+                              "Beam" = "Intertidal Flats", 
+                              "Otter" = "Channel"))
+
+shannon_summary %>% 
   ggplot(aes(Period, mean, color = Season)) +
   geom_point(position = position_dodge(width = 0.9), size = 3) + 
   #scale_y_continuous(expand = c(0,0), limits = c(2, 5)) +
   scale_color_manual(values = c("grey60", "black")) +
   facet_wrap(~TrawlType, ncol = 2) +
-  geom_errorbar(aes(x = Period, ymin = mean - se, ymax = mean + se), 
+  geom_errorbar(aes(x = Period, ymin = lower, ymax = upper), 
                 position = position_dodge(width = 0.9), 
                 width = 0.4, size = 1) +
   theme_trawls +
@@ -1278,15 +1268,29 @@ diversity %>%
   coord_cartesian(clip = "off")
 ```
 
-### Linear Model
+### Channel Model
 
-```{r}
-shannon_lm <- lm(
+```{r shannon_lm_otter}
+shannon_lm_otter <- lm(
   shannon ~ Period*Season + Site, 
-  data = diversity[diversity$shannon > 0,]
+  data = diversity[diversity$TrawlType == "Otter",]
 )
 
-shannon_lm %>% anova() %>% 
+shannon_lm_otter %>% anova() %>% 
+  rownames_to_column("term") %>% 
+  mutate_if(is.numeric, round, digits = 3) %>% 
+  knitr::kable()
+```
+
+### Mudflats Model
+
+```{r shannon_lm_beam}
+shannon_lm_beam <- lm(
+  shannon ~ Period*Season + Site, 
+  data = diversity[diversity$TrawlType == "Beam",]
+)
+
+shannon_lm_beam %>% anova() %>% 
   rownames_to_column("term") %>% 
   mutate_if(is.numeric, round, digits = 3) %>% 
   knitr::kable()
@@ -1296,7 +1300,7 @@ shannon_lm %>% anova() %>%
 
 ### Plot
 
-```{r}
+```{r shannon_assymp}
 shannon_assymp <- trawl_counts_nested %>% 
   dplyr::select(TrawlType, Period, Season, shannon) %>% 
   unnest(cols = c(shannon)) %>% 
@@ -1322,16 +1326,62 @@ shannon_assymp %>%
 
 ### Table
 
-```{r}
+```{r shannon_assymp_table}
 knitr::kable(shannon_assymp)
 ```
 
 
+## Plot: Richness & Diversity
 
+```{r richness_diversity_plot, fig.height = 8, include = FALSE}
+diversity_summary <- richness_summary %>% 
+  mutate(type = "species richness") %>% 
+  full_join(mutate(shannon_summary, type = "Shannon diversity"))
 
+panel_labels <- data.frame(
+  x = -Inf, y = Inf, 
+  TrawlType = fct_rev(factor(rep(c("Channel", "Intertidal Flats"), 2))), 
+  type = rep(c("species richness", "Shannon diversity"), each = 2), 
+  label = c("d", "c", "b", "a")
+)
 
+diversity_summary %>% 
+  mutate(TrawlType = fct_rev(as.factor(TrawlType))) %>% 
+  ggplot(aes(Period, mean, color = Season)) + 
+  geom_errorbar(aes(x = Period, ymin = lower, ymax = upper), 
+                position = position_dodge(width = 0.9), 
+                width = 0.4, size = 1) + 
+  geom_line(aes(x = as.numeric(as.factor(Period))),  
+            position = position_dodge(width = 0.9), show.legend = TRUE,
+            size = 1.1, linetype = "dashed") + 
+  geom_point(aes(shape = Season, size = Season), 
+             position = position_dodge(width = 0.9), stroke = 1.2,
+             fill = "white") + 
+  lemon::facet_rep_grid(type ~ TrawlType, scales = "free_y", switch = "y") + 
+  scale_color_manual(values = c("grey50", "black")) +
+  scale_size_manual(values = c(2, 2.5)) + 
+  scale_shape_manual(values = c(21, 16)) + 
+  guides(color = guide_legend(nrow = 1), 
+         linetype = guide_legend("adjusted p-value", nrow = 1, 
+                                 keywidth = unit(2, "lines"))) + 
+  theme_trawls +
+  theme(axis.title.y = element_blank(),
+        plot.title = element_text(size = 18, face = "bold", hjust = 0),
+        axis.title.x = element_blank(), 
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.box = "vertical",
+        legend.text = element_text(size = 18),
+        legend.title = element_text(size = 18, face = "bold"),
+        axis.text.y = element_text(size = 14),
+        axis.text.x = element_text(size = 16)) + 
+  labs(fill = "Season") + 
+  geom_text(aes(x = x, y = y, label = label), data = panel_labels, 
+            vjust = 1, hjust = -1, size = 7,
+            inherit.aes = FALSE)
+```
 
-
-
-
-
+```{r include = FALSE}
+ggsave(here("figures", "richness_diversity_plot.tiff"), width = 20, height = 18, 
+       units = "in", scale = 0.5, dpi = 500)
+```

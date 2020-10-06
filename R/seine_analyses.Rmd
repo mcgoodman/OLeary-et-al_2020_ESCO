@@ -18,6 +18,7 @@ knitr::opts_chunk$set(fig.height = 6, fig.width = 10, message = FALSE, warning =
 options(knitr.kable.NA = '')
 
 source(here("R", "cluster_bootstrap.R"))
+source(here("R", "simper_functions.R"))
 
 theme_trawls <- theme_classic() +
   theme(axis.line.x = element_line(size = 1), 
@@ -39,9 +40,22 @@ capitalize <- function(x) {
 }
 ```
 
+This document contains analyses of beach seine data from **O'Leary et al., "Effects of estuary-wide seagrass loss on fish populations"**, submitted to the journal *Estuaries and Coasts* and in review as of September 2020. Not all code is shown in document output, but code for plots or analyses which are not shown below can be viewed in the R markdown source code.
+
 # Metadata
 
+## Data Description
+
+Because the post-decline trawl surveys did not include any eelgrass habitat, and to account for potential temporal variations in fish communities unrelated to eelgrass, we evaluated fish abundance, size, and species composition in eelgrass habitat and adjacent unvegetated mudflats at two sites in the spring (April-May) of 2017 and 2018 (Figure 1b). The sites are in the middle portion of the bay (Windy Cove) and forebay near the mouth (Coleman’s Beach).  The beach seine used was 10.2 m long, 1.1 m high, and had a mesh size of 4 mm.
+
+Seines were conducted at a mean tide height of 0.43 ± 0.07 m MLLW). On any given day, we ensured that the number of replicates in each habitat type (eelgrass and unvegetated mudflat) was equal, and we alternated between habitat types. At Windy Cove, we conducted three replicate seines in each habitat type in each year. Seines were conducted 20-25 meters apart and we conducted seines in increasing distances from the edge of the eelgrass (into the bed for eelgrass seines and away from the bed for unvegetated seines). Seines were a minimum of 10 meters from the edge and maximum of 175 m from the edge, with the locations approximately consistent each year.  Water depths of the seines varied with bottom rugosity, with a mean water depth of 1.0 ± 0.14 m in unvegetated mudflats and 1.6 ± 0.11 m in eelgrass.  Although these depths differ, given that the height of the seine is 1 m, the depth should not have affected overall catch. Distance of haul depended on depth and eelgrass bed width and ranged from 5.6 to 23.5 m (mean of 15.9 ± 1.9 m) in the eelgrass and from 6.4 to 34 m (mean 19.8 ± 3.6 m) in the mudflats. At Coleman’s Beach, because of adjacent building structures and more continuous eelgrass beds, unvegetated habitat was limited and we therefore conducted two replicate seines per year in each habitat type. Further, because of the spacing of unvegetated areas at the site, one of the two eelgrass seines per year was directly adjacent to the unvegetated habitat, while the other was approximately 10 m from the edge. Both unvegetated sites were directly adjacent to eelgrass in each year. Depth in eelgrass habitat at Coleman’s Beach was 1.5 ± 0.04 m, and in the unvegetated habitat the depth was 1.6 ± 0.1 m. Distance of haul ranged from 8.5 to 12.6 m (mean 9.4 ± 0.75 m) in the eelgrass and ranged from 5.4 to 8.5 m in the unvegetated mudflat (mean 5.9 ± 0.54 m).  
+
+Because of differences in haul distance, we standardized fish biomass and abundnace by meter of haul for all seines. All fish caught were identified to species (except for young of the year rockfish, which we identified to the genus Sebastes). Total fish length was measured to the nearest mm and fish were released alive at the collection site. 
+
 ## Sample Size Breakdown
+
+Below is a table of sample sizes for each site (Colemans and Windy Cove), broken down by year and habitat (seagrass or unvegetated). The data are nearly balanced, with either 2 or 3 observations per site, habitat, and year. This yields a total of 20 observations.
+
 ```{r sample_size}
 seine_data <-
   read_csv(here("data", "seine_fish_data.csv")) %>%
@@ -65,6 +79,8 @@ seine_data %>%
 # Abundance
 
 ## Bar Chart
+
+Overall, abundance (measured as numbers density per meter of seine) does not seem to differ between eelgrass and unvegetated habitat, in either the forebay (Colemans) or backbay (Windy Cove).
 
 ```{r abundance_plot, fig.height = 4, fig.width = 8}
 seine_count_data <- 
@@ -106,6 +122,8 @@ seine_summary %>%
 
 ## Abundance Model
 
+To assess differences in numbers density as a function of habitat, site, and their interaction, we fit a generalized linear model with a Gamma error distribution and a log link. The model confirms what is apparent from the bar chart above - numbers density is similar between both habitats and both sites.
+
 ```{r abundance_glm}
 seine_count_lm_data <- 
   seine_count_data %>% 
@@ -128,6 +146,8 @@ seine_count_model %>%
 # Biomass
 
 ## Bar Chart
+
+Here, biomass is estimated using individual fish lengths and length weight relationships from FishBase. Mean biomass is similar between the forebay seagrass habitat and the backbay seagrass and unvegetated habitat, but is markedly higher in the forebay unvegetated habitat, although all error bars overlap.
 
 ```{r biomass_plot, fig.height = 4, fig.width = 8}
 seine_biomass_lm_data <- seine_data %>%  
@@ -164,6 +184,8 @@ seine_biomass_summary %>%
 
 ## Biomass Model
 
+To assess differences in biomass as a function of site and habitat, we fit another generalized linear model with a Gamma error distribution and a log link. The model suggests that, as for numbers density, biomass is similar between both sites and habitats.
+
 ```{r biomass_glm}
 biomass_model <- glm(scaled_biomass ~ site_name*seagrass_unvegetated,
                      data = seine_biomass_lm_data, 
@@ -179,6 +201,8 @@ biomass_model %>% car::Anova(test = "LR") %>% as.data.frame() %>%
 # Species Composition
 
 ## NMDS Plot
+
+We performed a 2-dimensional non-metric multi-dimensional scaling (NMDS) procedure on a Bray-Curtis dissimilarity matrix of the seine species number-density data, which resulted in a plot with a stress value of 0.13.
 
 ```{r nmds_run, results = "hide"}
 ## Convert data to wide-format species counts
@@ -209,6 +233,8 @@ mds_plot_data$seagrass <- mds_rownames
 nmds_colors <- RColorBrewer::brewer.pal(6, "Paired")[c(2, 6)]
 ```
 
+The plot shows marked, but non-monotonic, differences in species composition between seagrass and unvegetated habitats. Specifically, fish communities in unvegetated habitat are distinct between the forebay and the backbay, but there is considerable overlap between seagrass communities from the forebay and backbay. In short, unvegetated communities display greater $\beta$-diversity than seagrass communities.
+
 ```{r nmds_plot, fig.height = 4, fig.width = 8}
 mds_plot_data %>% 
   separate(seagrass, c("seagrass", "site"), sep = " ", extra = "merge") %>% 
@@ -225,6 +251,8 @@ mds_plot_data %>%
 
 ## PERMANOVA
 
+We fit a permutational multivariate analysis of variance (PERMANOVA) on a Bray-Curtis dissimilarity matrix of species abundance with 10,000 permutations. The results agree with the qualitative results from the NMDS plot - fish communities are distinct between seagrass and unvegetated habitats, between the forebay and the backbay, and there are further differences not explained by habitat or site alone.
+
 ```{r permanova}
 seine_permanova <- adonis2(
   seine_bray ~ site_name*seagrass_unvegetated, 
@@ -240,6 +268,10 @@ seine_permanova %>% as.data.frame() %>%
 
 ## Pairwise Comparisons
 
+Because the PERMANOVA displayed a significant interaction, we fit pairwise PERMANOVA models, each with 10,000 permutations, and adjusted p-values using the Benjamini & Hochberg method. 
+
+The results suggest that, as evident from the NMDS plot, seagrass communities are similar between the forebay and the backbay. However, in both habitats, seagrass communities are distinct from unvegetated communities, and the unvegetated communities from the forebay and the backbay are also distinct.
+
 ```{r permanova_pairwise}
 seine_pairs <- RVAideMemoire::pairwise.perm.manova(
   seine_bray, fact = ordination_groups,
@@ -251,3 +283,114 @@ knitr::kable(seine_pairs_p)
 ```
 
 ## SIMPER
+
+For two pairwise comparisons of interest - that between the seagrass and unvegetated communities in the forebay, and that between the seagrass and unvegetated communities in the backbay, we fit a similarity percentages (SIMPER) analysis, reporting numbers density for species identified by the SIMPER as contributing to observed differences in community composition more than would be expected at random. For each SIMPER output, relevant species are listed, and an abundance plot is provided. 
+
+**How to interpret this output:** This output is ordered in terms of each species contribution to the difference between groups examined. The `average` variable is the average contribution to the overall dissimilarity, and the `sd` is the standard deviation of that contribution. The `cumsum` variable is the total percent of the variation accounted for by the species and all other species above it.
+
+Code is shown in output for the first SIMPER only, as the code is near-id
+
+### Coleman's Beach 
+
+```{r}
+colemans_simper <-
+  seine_sp_matrix[seine_sp_data$site_name == "Colemans",] %>%
+  filter_sp() %>% 
+  simper(seine_sp_data$seagrass_unvegetated[seine_sp_data$site_name == "Colemans"]) %>% 
+  summary %$% Seagrass_Unvegetated %>% 
+  format_simper() %>% 
+  rename(seagrass = ava, unvegetated = avb)
+
+knitr::kable(colemans_simper)
+
+coleman_simper_summary <- seine_sp_data %>% 
+  filter(site_name == "Colemans") %>% 
+  sum_seine_abundance(colemans_simper$Species, "seagrass_unvegetated")
+  
+coleman_simper_summary %>% 
+  plot_seine_abundance("seagrass_unvegetated") + 
+  guides(fill = guide_legend("Habitat"))
+```
+
+### Windy Cove
+
+```{r}
+windy_simper <-
+  seine_sp_matrix[seine_sp_data$site_name == "Windy Cove",] %>%
+  filter_sp() %>% 
+  simper(seine_sp_data$seagrass_unvegetated[seine_sp_data$site_name == "Windy Cove"]) %>% 
+  summary %$% Seagrass_Unvegetated %>% 
+  format_simper() %>% 
+  rename(seagrass = ava, unvegetated = avb)
+
+knitr::kable(windy_simper)
+
+windy_simper_summary <- seine_sp_data %>% 
+  filter(site_name == "Windy Cove") %>% 
+  sum_seine_abundance(windy_simper$Species, "seagrass_unvegetated")
+
+windy_simper_summary %>% 
+  plot_seine_abundance("seagrass_unvegetated") + 
+  guides(fill = guide_legend("Habitat"))
+```
+
+### Combined SIMPER Plot
+
+Abundance of species contributing to observed differences in community structure between unvegetated habitats (dark gray) and eelgrass (light gray) based on a SIMPER analysis from beach seine data for: Coleman Park Beach (mouth), and Windy Cove (mid-bay). Where there were no individuals of a species at a site, this is indicated with a zero.
+
+```{r simper_combined, echo = FALSE}
+seine_common_names <- tibble(
+  common = c("speckled sanddab", "staghorn sculpin", "bay pipefish", 
+             "giant kelpfish", "topsmelt"), 
+  species = c("Citharichthys\nstigmaeus", "Leptocottus\narmatus",
+              "Syngnathus\nleptorhynchus", "Heterostichus\nrostratus", 
+              "Atherinops\naffinis")
+  )
+
+seine_simper_summary <-
+  coleman_simper_summary %>% 
+  mutate(id = "Coleman Park Beach") %>% 
+  rbind(mutate(windy_simper_summary, id = "Windy Cove"))
+
+seine_simper_plot_data <- 
+  seine_simper_summary %>% 
+  left_join(seine_common_names, by = "species") %>% 
+  mutate(seagrass_unvegetated = gsub("Sea", "Eel", seagrass_unvegetated),
+         seagrass_unvegetated = 
+           paste0(" ", seagrass_unvegetated, " "), 
+         common = fct_rev(factor(common)), 
+         label = ifelse(is.na(mean), 0, NA))
+
+seine_simper_plot  <- seine_simper_plot_data %>% 
+  ggplot(aes(mean, common, fill = seagrass_unvegetated)) + 
+  geom_barh(stat = "identity", position = position_dodgev(height = 0.9),
+           color = "black", size  = 0.8) + 
+  geom_errorbarh(aes(xmin = lower, xmax = upper), 
+                width = 0.4, size = 0.8,
+                position = position_dodgev(height = 0.9))  + 
+  geom_text(aes(x = 0.07, label = label), fontface = "bold", color = "grey60", 
+              position = position_dodgev(height = 0.9), size = 5) + 
+  scale_fill_manual(values = c("grey80", "grey30")) + 
+  scale_x_continuous(limits = c(0, max(seine_simper_summary$upper, na.rm = TRUE) * 1.05),
+                     expand = c(0,0)) +  
+  theme_trawls + 
+  ggforce::facet_col(~id, scales = "free_y", space = "free") +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_text(size = 17),
+        legend.position = "bottom", 
+        legend.text = element_text(size = 16), 
+        legend.title = element_text(size = 16, face = "bold"), 
+        strip.text = element_text(hjust = 0)) + 
+  labs(x = "Abundance (count/m)", fill = "Habitat") + 
+  guides(fill = guide_legend(reverse = TRUE))
+
+
+seine_simper_plot 
+```
+
+
+```{r simper_save, include = "FALSE"}
+ggsave(here("figures", "seine_simper.tiff"), seine_simper_plot, 
+       width = 18, height = 12, units = "in", scale = 0.55, dpi = 500)
+```
+
