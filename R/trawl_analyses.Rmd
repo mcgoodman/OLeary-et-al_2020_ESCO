@@ -1333,7 +1333,7 @@ knitr::kable(shannon_assymp)
 
 ## Plot: Richness & Diversity
 
-```{r richness_diversity_plot, fig.height = 8, include = FALSE}
+```{r richness_diversity_plot, fig.height = 8, echo = FALSE}
 diversity_summary <- richness_summary %>% 
   mutate(type = "species richness") %>% 
   full_join(mutate(shannon_summary, type = "Shannon diversity"))
