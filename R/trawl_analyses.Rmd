@@ -227,7 +227,12 @@ biomass <-
   filter_trawls() %>% 
   mutate(spec_binomial = paste(Genus, Species)) %>% 
   group_by(Period, Season, Year, TrawlType, Site, Replicate) %>% 
-  summarize(biomass = sum(weight_g))
+  summarize(biomass = sum(weight_g)) %>% 
+  right_join(
+    abundance %>%
+      select(Period, Season, Year, TrawlType, Site, Replicate)
+  ) %>% 
+  mutate(biomass = ifelse(is.na(biomass), 0, biomass))
 
 biomass_summary <- biomass %>%
   group_by(Period, Season, TrawlType) %>%
@@ -321,7 +326,7 @@ Model structure is the same as for abundance models, but with a Gamma error dist
 
 ```{r biomass_model_otter}
 otter_biomass_glm <- glm(
-  biomass ~ Period*Season + Site, 
+  (biomass + 1) ~ Period*Season + Site, 
   family = Gamma(link = "log"),
   data = biomass[biomass$TrawlType == "Otter", ]
 )
@@ -358,7 +363,7 @@ As for the abundance model, only season is significant, and thus no pairwise com
 
 ```{r biomass_model_beam}
 beam_biomass_glm <- glm(
-  biomass ~ Period*Season + Site, 
+  (biomass + 1) ~ Period*Season + Site, 
   family = Gamma(link = "log"),
   data = biomass[biomass$TrawlType == "Beam",]
 )
