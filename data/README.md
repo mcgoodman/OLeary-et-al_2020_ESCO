@@ -1,0 +1,56 @@
+Data files for **O'Leary et al. (2020), "Effects of estuary-wide seagrass loss on fish populations"**, in the journal *Estuaries and Coasts*. 
+
+- `seine_fish_data.csv` contains IDs, lengths, estimated weights, and trophic levels for individual fish collected in beach seine samples: 
+  - `seine_id`: 
+  - `site_name`:
+  - `date`, `year`, & `time`:
+  - `lat` & `long`:
+  - `distance`:
+  - `common_name`, `genus` & `species`:
+  - `length_mm`:
+  - `weight_g`:
+  - `trophic_level`:
+- `seine_fishbase_data.csv`
+  - `Species`:
+  - `lw_a` & `lw_b`:
+  - `lw_level`:
+  - `lw_type`:
+  - `trophic_level`:
+  - `trophic_level_se`:
+  - `trophic_level_type`:
+  - `trophic_level_ref`:
+- `trawl_fish_counts.csv`
+  - `Year`, `Season`, & `Date`:
+  - `TrawlType`:
+  - `Site`:
+  - `Replicate`:
+  - `Genus` & `Species`:
+  - `Count`:
+- `trawl_fish_lengths.csv`
+  - `Year`, `Season`, & `Date`:
+  - `CollectorNames`:
+  - `TrawlType`:
+  - `Site`:
+  - `Replicate`:
+  - `Common_name`, `Genus`, & `Species`:
+  - `Length_mm`:
+  - `weight_g`:
+  - `trophic_level`:
+- `trawl_fishbase_data.csv`
+  - `sciname`:
+  - `a` & `b`:
+  - `trophic_level`:
+  - `trophic_level_se`:
+  - `LW_Notes`:
+  - `Troph_Notes`:
+- `trawl_information.csv`
+  - `Period`, `Year`, `Season`, & `Date`:
+  - `time_start` & `time_end`:
+  - `lat_start`, `long_start`, `lat_end`, & `long_end`:
+  - `trawl_length_min`:
+  - `depth_m`:
+  - `depth_start` & `depth_end`:
+  - `depth_min` & `depth_max`: 
+  - `tow_direction`:
+  - `boat_speed`:
+  - `collectors`:
