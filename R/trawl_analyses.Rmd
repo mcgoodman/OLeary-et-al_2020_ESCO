@@ -520,22 +520,20 @@ Pairwise PERMANOVA models are fit using a wrapper function from the `RVAideMemoi
 All pairwise comparisons are significant, except Fall pre-decline vs. post-decline.
 
 ```{r channel_permanova_pairwise}
-otter_species$group <- with(otter_species, paste(Period, Season))
+## Function to fit pairwise PERMANOVA models
+source(here("R", "pairwise_permanova.R"))
 
-## Bray-Curtis dissimilarity matrix
-otter_bray <- vegdist(otter_matrix, method = "bray")
+otter_species$group <- with(otter_species, paste(Period, Season))
 
 set.seed(200)
 
 ## Fit pairwise PERMANOVA models
-otter_permanova_pairs <- RVAideMemoire::pairwise.perm.manova(
-  otter_bray,
-  fact = otter_species$group, 
-  nperm = 10000, 
-  p.method = "fdr" # Benjamini & Hochberg
+otter_permanova_pairs <- pairwise_permanova(
+  sp_matrix = otter_matrix, 
+  group_var = otter_species$group
 )
 
-knitr::kable(as.data.frame(round(otter_permanova_pairs$p.value, 3)))
+knitr::kable(otter_permanova_pairs$contrasts)
 ```
 
 #### SIMPER
@@ -643,20 +641,15 @@ Pairwise comparisons are as described above. All pairwise comparisons are signif
 ```{r mudflats_permanova_pairwise}
 beam_species$group <- with(beam_species, paste(Period, Season))
 
-## Bray-Curtis dissimilarity matrix
-beam_bray <- vegdist(beam_matrix, method = "bray")
-
 set.seed(200)
 
 ## Fit pairwise PERMANOVA models
-beam_permanova_pairs <- RVAideMemoire::pairwise.perm.manova(
-  beam_bray,
-  fact = beam_species$group, 
-  nperm = 10000, 
-  p.method = "fdr" # Benjamini & Hochberg
+beam_permanova_pairs <- pairwise_permanova(
+  sp_matrix = beam_matrix, 
+  group_var = beam_species$group
 )
 
-knitr::kable(as.data.frame(round(beam_permanova_pairs$p.value, 3)))
+knitr::kable(beam_permanova_pairs$contrasts)
 ```
 
 \newpage

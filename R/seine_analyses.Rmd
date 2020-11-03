@@ -273,13 +273,15 @@ Because the PERMANOVA displayed a significant interaction, we fit pairwise PERMA
 The results suggest that, as evident from the NMDS plot, seagrass communities are similar between the forebay and the backbay. However, in both habitats, seagrass communities are distinct from unvegetated communities, and the unvegetated communities from the forebay and the backbay are also distinct.
 
 ```{r permanova_pairwise}
-seine_pairs <- RVAideMemoire::pairwise.perm.manova(
-  seine_bray, fact = ordination_groups,
-  p.method = "fdr", nperm = 10000
+## Function to fit pairwise PERMANOVA models
+source(here("R", "pairwise_permanova.R"))
+
+seine_pairs <- pairwise_permanova(
+  seine_sp_matrix, 
+  group_var = ordination_groups
 )
 
-seine_pairs_p <- as.data.frame(round(seine_pairs$p.value, digits = 3))
-knitr::kable(seine_pairs_p)
+knitr::kable(seine_pairs$contrasts)
 ```
 
 ## SIMPER
