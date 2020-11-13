@@ -28,7 +28,7 @@ pairwise_permanova <- function(sp_matrix, group_var, dist = "bray", adj = "fdr",
     contrasts$R2[i] <- round(fit$R2[1], digits = 3)
     contrasts$F_value[i] <- round(fit$F.Model[1], digits = 3)
     contrasts$df1[i] <- fit$Df[1]
-    contrasts$df2[i] <- fit$Df[3]
+    contrasts$df2[i] <- fit$Df[2]
     contrasts$p_value[i] <- fit$`Pr(>F)`[1]
   }
   

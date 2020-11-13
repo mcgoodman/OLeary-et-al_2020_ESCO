@@ -20,7 +20,7 @@ options(knitr.kable.NA = '')
 theme_trawls <- theme_classic() +
   theme(axis.line.x = element_line(size = 1), 
         axis.line.y = element_line(size = 1), 
-        axis.ticks = element_line(size = 1),
+        axis.ticks = element_line(size = 1, color = "black"),
         axis.ticks.length = unit(0.4, "lines"),
         strip.background = element_blank(),
         axis.text = element_text(size = 14, color = "black"),
@@ -40,9 +40,9 @@ This document contains analyses of trawl data from **O'Leary et al., "Effects of
 
 ## Data Description 
 
-Trawl surveys were conducted before (2006-2007) and after (2016-2017) the eelgrass decline at the same seven sites in Morro Bay (Figure 1a) during high tide (post-decline: intertidal flats 0.93 ± 0.08 m SE MLLW, channel 1.17 ± 0.06 m SE MLLW; unrecorded during pre-decline period). We surveyed four sites in the back-bay intertidal flats using a beam trawl (2 m wide at the mouth, 4 m long, with a 1 m reinforced cod end and a 4 mm mesh size). The mean depth of the beam trawls was 1.0 ± 0.06 m (SE). The remaining three sites surveyed were in the channel running from the mid-bay to the bay mouth. The channel is dredged annually and is too deep for eelgrass to survive, but has persistent eelgrass along the margins. We surveyed the channel sites using an otter trawl (4.6 m wide at the mouth, 7.2 m long with a mesh size of 14 mm in the wings and 8 mm in the code end). The mean depth of channel trawls was 5.3 ± 0.2 m (SE). The size of the trawls used was based on the equipment used in the early period, and we replicated prior methods for the 2016-2017 surveys. Though trawl size between the two habitats varied, we do not explicitly compare the trawl types, but rather compare results between seasons and period for each respective trawl type. 
+Trawl surveys were conducted before (2006-2007) and after (2016-2017) the eelgrass decline at the same seven sites in Morro Bay (Figure 1a) during high tide (post-decline: intertidal flats 1.03  ± 0.42  m SD MLLW, channel 1.12 ± 0.22 m SD MLLW; pre-decline: intertidal flats 0.89 m ± 0.33 m SD MLLW, channel 1.02 ± 0.17 m SD MLLW). We surveyed four sites in the back-bay intertidal flats using a beam trawl (2 m wide at the mouth, 4 m long, with a 1 m reinforced cod end and a 4 mm mesh size). The mean depth of the beam trawls was 1.05 ± 0.21 m (SD) in the pre-decline period, and 1.05 ± 0.27 m (SD) in the post-decline period. The remaining three sites surveyed were in the channel running from the mid-bay to the bay mouth. The channel is dredged annually and is too deep for eelgrass to survive, but has persistent eelgrass along the margins. We surveyed the channel sites using an otter trawl (4.6 m wide at the mouth, 7.2 m long with a mesh size of 14 mm in the wings and 8 mm in the code end). The mean depth of channel trawls was 4.68 ± 1.8 m (SD) in the pre-decline period and  5.3 ± 0.95 m (SD) in the post-decline period. The size of the trawls used was based on the equipment used in the early period, and we replicated prior methods for the 2016-2017 surveys. Although trawl size between the two habitats varied, we do not explicitly compare the trawl types, but rather compare results between seasons and period for each respective trawl type. 
 
-In both pre- and post-decline periods, the trawls (beam and otter) were 10-11 minutes long at a speed (over ground) of 0.8 – 1.8 knots. In both periods, trawls were conducted during two seasons: October-November (fall) and June-August (summer). In the pre-decline period (2006-2007), we conducted three replicate trawls per site in six sites per season per year, with data collected in the summer and fall of both years. In the intertidal flats during the pre-decline period, sites B1, B2, and B4 were consistently surveyed using a beam trawl except in the summer of 2006, when site B3 was surveyed instead of site B4 (Figure 1b).  In the post-decline period (2016-2017), we conducted three replicate trawls per site per season per year at all seven sites (Figure 1b), with surveys conducted in the fall of 2016 and the summer of 2017. The only exceptions to replication level in the post-decline period were that in the fall of 2016 where we were only able to conduct two replicate trawls at channel site O3, and we conducted four replicate trawls at intertidal site 2. At the end of each trawl (otter and beam), all organisms were removed from the trawl nets, fish were identified to species, and the total length of each fish was measured to the nearest mm. Fish were returned alive to the water at their collection site. 
+In both pre- and post-decline periods, the trawls (beam and otter) were 10-11 minutes long at a speed (over ground) of 0.8 – 1.8 knots. In both periods, trawls were conducted during two seasons: October-November (fall) and June-August (summer). In the pre-decline period (2006-2007), we conducted three replicate trawls per site in six sites per season per year, with data collected in the summer and fall of both years. In the intertidal flats during the pre-decline period, sites B1, B2, and B4 were consistently surveyed using a beam trawl except in the summer of 2006, when site B3 was surveyed instead of site B4 (Figure 1b). In the post-decline period (2016-2017), we conducted three replicate trawls per site per season per year at all seven sites (Figure 1b), with surveys conducted in the fall of 2016 and the summer of 2017. The only exceptions to replication level in the post-decline period were that in the fall of 2016 where we were only able to conduct two replicate trawls at channel site O3, and we conducted four replicate trawls at intertidal site 2. At the end of each trawl (otter and beam), all organisms were removed from the trawl nets, fish were identified to species, and the total length of each fish was measured to the nearest mm. Fish were returned alive to the water at their collection site. 
 
 
 ## Sample Size Breakdown
@@ -63,7 +63,9 @@ trawl_info %>%
 
 ## Tide Level Estimates
 
-During both time periods, trawls were conducted during high tide. However, trawl start and end times were not recorded for trawls conducted before decline. Just as a check, here are estimated tidal heights for the fall and summer trawls following Eelgrass decline, in both habitats, confirming that trawls were conducted during high tide.
+Tide level estimates are given based on trawl start time, using information from Port San Luis, California. Start time was not recorded for some pre-decline surveys. Tidal height is given as meters above the mean lower low water (MLLW).
+
+### By Period, Trawl Type, and Season
 
 ```{r tides}
 trawl_tides <- trawl_info %>% 
@@ -78,24 +80,37 @@ tide_data <- rtide::tide_height_data(tide_data)
 trawl_tides$tide <- tide_data$TideHeight
 
 trawl_tides %>% 
+  filter(Site != "Beam 3") %>% 
   group_by(Period, `trawl type` = TrawlType, Season) %>% 
-   summarize(mean = round(mean(tide), 3), 
-            `standard error` = round(sd(tide)/sqrt(n()), 3)) %>% 
+   summarize(`Mean tidal height (m)` = round(mean(tide), 2), 
+             `tidal height SD` = round(sd(tide), 2)) %>% 
   knitr::kable()
 ```
+
+### By Period and Trawl Type
+
+```{r}
+trawl_tides %>% 
+  filter(Site != "Beam 3") %>% 
+  group_by(Period, `trawl type` = TrawlType) %>% 
+   summarize(`Mean tidal height (m)` = round(mean(tide), 2), 
+             `tidal height SD` = round(sd(tide), 2)) %>% 
+  knitr::kable()
+```
+
 
 ## Trawl Depths
 
 ### By Period, Trawl Type, and Season
 
-Likewise, these data only exist for trawls conducted between 2016 and 2017.
+About 26% of pre-decline surveys lack depth information. 
 
 ```{r depth}
 trawl_tides %>% 
-  filter(!is.na(depth_m)) %>% 
-  group_by(Period, TrawlType, Season) %>% 
-  summarize(`Mean Depth (m)` = mean(depth_m),
-            `Depth SE` = sd(depth_m)/sqrt(n())) %>% 
+  filter(!is.na(depth_m) & Site != "Beam 3") %>% 
+  group_by(Period, `trawl type` = TrawlType, Season) %>% 
+  summarize(`Mean Depth (m)` = round(mean(depth_m), 2),
+            `Depth SD` = round(sd(depth_m), 2)) %>% 
   knitr::kable()
 ```
 
@@ -103,10 +118,10 @@ trawl_tides %>%
 
 ```{r depth2}
 trawl_tides %>% 
-  filter(!is.na(depth_m)) %>% 
-  group_by(Period, TrawlType) %>% 
-  summarize(`Mean Depth (m)` = mean(depth_m),
-            `Depth SE` = sd(depth_m)/sqrt(n())) %>% 
+  filter(!is.na(depth_m) & Site != "Beam 3") %>% 
+  group_by(Period, `trawl type` = TrawlType) %>% 
+  summarize(`Mean Depth (m)` = round(mean(depth_m), 2),
+            `Depth SD` = round(sd(depth_m), 2)) %>% 
   knitr::kable()
 ```
 
@@ -1107,7 +1122,6 @@ diversity %>%
   ylab("Mean Sample Richness") + 
   annotate("segment", x = -Inf, xend = -Inf, y = -Inf, yend = Inf, size = 1) +
   coord_cartesian(clip = "off")
-
 ```
 
 ### Channel Model

@@ -23,7 +23,7 @@ source(here("R", "simper_functions.R"))
 theme_trawls <- theme_classic() +
   theme(axis.line.x = element_line(size = 1), 
         axis.line.y = element_line(size = 1), 
-        axis.ticks = element_line(size = 1),
+        axis.ticks = element_line(size = 1, color = "black"),
         axis.ticks.length = unit(0.4, "lines"),
         strip.background = element_blank(),
         axis.text = element_text(size = 14, color = "black"),
