@@ -15,4 +15,4 @@ The files in this repository are organized as follows:
 
 **The `output` directory** contains the statistical output, tables, and figures from the `trawl_analyses.Rmd` and `seine_analyses.Rmd` files, with annotations.
 
-All data and code in this repository is property of Jennifer O'Leary and coauthors, and may not be used without permission from the authors. All code was developed by Maurice Goodman (goodman.maurice@gmail.com). 
+All code in this repository was developed by Maurice Goodman (goodman.maurice@gmail.com). Feel free to reference or use the code for your own research or learning, but please do not use the data contained herein for other research works without first obtaining permission from the authors.
